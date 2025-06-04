@@ -34630,10 +34630,6 @@ const APIKEY = core.getInput("api-key") || process.env.APIKEY;
 const WAIT_FOR_SUCCESS =
   core.getInput("wait-for-success") || process.env.WAIT_FOR_SUCCESS;
 
-function getLatestDeploymentId(data) {
-  return data.deploys.sort((a, b) => new Date(b.deploy.startedAt) - new Date(a.deploy.startedAt))[0]?.id;
-}
-
 async function getDeploymentStatus(deployId) {
   const response = await fetch(
     "https://api.render.com/v1/services/" + SERVICEID + "/deploys/" + deployId,
@@ -34650,16 +34646,14 @@ async function getDeploymentStatus(deployId) {
   }
 }
 
-async function waitForSuccess(data) {
-  const latestDeploymentId = getLatestDeploymentId(data);
-
+async function waitForSuccess(deployId) {
   let previousStatus = "";
   while (true) {
     await new Promise((res) => {
       setTimeout(res, 10000);
     });
 
-    const status = await getDeploymentStatus(latestDeploymentId);
+    const status = await getDeploymentStatus(deployId);
 
     if (status !== previousStatus) {
       core.info(`Deploy status: ${status}`);
@@ -34700,6 +34694,8 @@ async function run() {
     );
     return;
   }
+
+  core.info(`Deploy ${data.status} - Commit: ${data.commit.message}`);
 
   if (WAIT_FOR_SUCCESS) {
     await waitForSuccess(data);
