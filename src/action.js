@@ -6,7 +6,11 @@ const APIKEY = core.getInput("api-key") || process.env.APIKEY;
 const WAIT_FOR_SUCCESS =
   core.getInput("wait-for-success") || process.env.WAIT_FOR_SUCCESS;
 
-async function retrieveStatus(deployId) {
+function getLatestDeploymentId(data) {
+  return data.deploys.sort((a, b) => new Date(b.deploy.startedAt) - new Date(a.deploy.startedAt))[0]?.id;
+}
+
+async function getDeploymentStatus(deployId) {
   const response = await fetch(
     "https://api.render.com/v1/services/" + SERVICEID + "/deploys/" + deployId,
     {
@@ -18,18 +22,20 @@ async function retrieveStatus(deployId) {
   if (response.ok) {
     return data.status;
   } else {
-    throw Error("Could not retrieve deploy information.")
+    throw Error("Could not retrieve latest deployment information.")
   }
 }
 
 async function waitForSuccess(data) {
+  const latestDeploymentId = getLatestDeploymentId(data);
+
   let previousStatus = "";
   while (true) {
     await new Promise((res) => {
       setTimeout(res, 10000);
     });
 
-    const status = await retrieveStatus(data.id);
+    const status = await getDeploymentStatus(latestDeploymentId);
 
     if (status !== previousStatus) {
       core.info(`Deploy status: ${status}`);
@@ -70,8 +76,6 @@ async function run() {
     );
     return;
   }
-
-  core.info(`Deploy ${data.status} - Commit: ${data.commit.message}`);
 
   if (WAIT_FOR_SUCCESS) {
     await waitForSuccess(data);
