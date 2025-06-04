@@ -7,7 +7,7 @@ const WAIT_FOR_SUCCESS =
   core.getInput("wait-for-success") || process.env.WAIT_FOR_SUCCESS;
 
 function getLatestDeploymentId(data) {
-  return data.deploys.sort((a, b) => new Date(b.deploy.startedAt) - new Date(a.deploy.startedAt))[0]?.id;
+  return data.sort((a, b) => new Date(b.deploy.startedAt) - new Date(a.deploy.startedAt))[0]?.id;
 }
 
 async function getDeploymentStatus(deployId) {
