@@ -34698,7 +34698,7 @@ async function run() {
   core.info(`Deploy ${data.status} - Commit: ${data.commit.message}`);
 
   if (WAIT_FOR_SUCCESS) {
-    await waitForSuccess(data);
+    await waitForSuccess(data.id);
   }
 }
 
